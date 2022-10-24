@@ -5,6 +5,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/pelletier/go-toml"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -120,4 +121,27 @@ func GetBool(tree *toml.Tree, key string, values ...bool) bool {
 
 func Plural(s string) string {
 	return inflection.Plural(strings.Trim(s, " "))
+}
+
+func StripKeywords(s string, values []string) string {
+	for _, value := range values {
+		if strings.Contains(s, value) {
+			s = strings.ReplaceAll(s, value, "")
+		}
+	}
+	return s
+}
+
+func NormalizeName(s string) string {
+	re := regexp.MustCompile(`([a-z\d])([A-Z])`)
+	s = re.ReplaceAllString(s, "${1}_${2}")
+	if strings.ContainsAny(s, "-, ") {
+		r := strings.NewReplacer("-", "_", ",", "_", " ", "_")
+		s = r.Replace(s)
+	}
+	if strings.Contains(s, "__") {
+		re := regexp.MustCompile(`_+`)
+		s = re.ReplaceAllString(s, "_")
+	}
+	return strings.ToLower(s)
 }
